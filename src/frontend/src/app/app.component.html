@@ -1,0 +1,91 @@
+<main class="layout">
+  <section class="header-card">
+    <h1>{{ title }}</h1>
+    <p>Manage patients, appointments, and treatment workflows from one dashboard.</p>
+  </section>
+
+  <section class="grid">
+    <article class="card">
+      <h2>Register Patient</h2>
+      <form [formGroup]="patientForm" (ngSubmit)="createPatient()" class="form-stack">
+        <input type="text" placeholder="First name" formControlName="firstName">
+        <input type="text" placeholder="Last name" formControlName="lastName">
+        <input type="date" formControlName="dateOfBirth">
+        <input type="email" placeholder="Email" formControlName="email">
+        <input type="text" placeholder="Phone number" formControlName="phoneNumber">
+        <select formControlName="gender">
+          <option value="Unknown">Unknown</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Non-binary">Non-binary</option>
+        </select>
+        <button type="submit">Create Patient</button>
+      </form>
+    </article>
+
+    <article class="card">
+      <h2>Schedule Appointment</h2>
+      <form [formGroup]="appointmentForm" (ngSubmit)="createAppointment()" class="form-stack">
+        <select formControlName="patientId">
+          <option value="" disabled selected>Select patient</option>
+          <option *ngFor="let patient of patients" [value]="patient.id">
+            {{ patient.firstName }} {{ patient.lastName }}
+          </option>
+        </select>
+        <input type="text" placeholder="Doctor name" formControlName="doctorName">
+        <input type="datetime-local" formControlName="startAtUtc">
+        <input type="datetime-local" formControlName="endAtUtc">
+        <input type="text" placeholder="Reason" formControlName="reason">
+        <button type="submit">Create Appointment</button>
+      </form>
+    </article>
+  </section>
+
+  <section class="card">
+    <h2>Patients</h2>
+    <p *ngIf="loading">Loading...</p>
+    <p *ngIf="errorMessage" class="error">{{ errorMessage }}</p>
+    <table *ngIf="!loading && patients.length > 0">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>DOB</th>
+          <th>Gender</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let patient of patients">
+          <td>{{ patient.firstName }} {{ patient.lastName }}</td>
+          <td>{{ patient.email }}</td>
+          <td>{{ patient.phoneNumber }}</td>
+          <td>{{ patient.dateOfBirth }}</td>
+          <td>{{ patient.gender }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="card">
+    <h2>Appointments</h2>
+    <table *ngIf="appointments.length > 0">
+      <thead>
+        <tr>
+          <th>Doctor</th>
+          <th>Start</th>
+          <th>End</th>
+          <th>Reason</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let appointment of appointments">
+          <td>{{ appointment.doctorName }}</td>
+          <td>{{ appointment.startAtUtc }}</td>
+          <td>{{ appointment.endAtUtc }}</td>
+          <td>{{ appointment.reason }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</main>

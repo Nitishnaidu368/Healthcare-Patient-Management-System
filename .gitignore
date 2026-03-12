@@ -1,0 +1,23 @@
+# General
+.DS_Store
+*.log
+
+# Node / Angular
+node_modules/
+dist/
+coverage/
+
+# .NET
+bin/
+obj/
+TestResults/
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.user
+
+# Local env
+.env
+.env.*
