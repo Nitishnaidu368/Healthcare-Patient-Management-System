@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AppointmentRequest, Patient, PatientRequest } from './models/patient.model';
 import { PatientApiService } from './services/patient-api.service';
@@ -11,7 +11,10 @@ import { PatientApiService } from './services/patient-api.service';
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
+  private readonly fb = inject(FormBuilder);
+  private readonly api = inject(PatientApiService);
+
   protected readonly title = 'Healthcare Patient Management';
   protected patients: Patient[] = [];
   protected appointments: AppointmentRequest[] = [];
@@ -35,10 +38,7 @@ export class AppComponent {
     reason: ['', [Validators.required]]
   });
 
-  constructor(
-    private readonly fb: FormBuilder,
-    private readonly api: PatientApiService
-  ) {
+  ngOnInit(): void {
     this.loadData();
   }
 

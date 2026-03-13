@@ -1,6 +1,8 @@
 module.exports = function (config) {
   config.set({
     basePath: '',
+    port: 9878,
+    urlRoot: '/karma-ci/',
     frameworks: ['jasmine', '@angular-devkit/build-angular'],
     plugins: [
       require('karma-jasmine'),
@@ -24,8 +26,9 @@ module.exports = function (config) {
         { type: 'text-summary' }
       ]
     },
-    reporters: ['progress', 'kjhtml'],
+    reporters: ['progress'],
     browsers: ['ChromeHeadless'],
-    restartOnFileChange: true
+    restartOnFileChange: false,
+    singleRun: true
   });
 };

@@ -21,3 +21,15 @@ TestResults/
 # Local env
 .env
 .env.*
+
+# SQLite local dev db
+*.db
+*.db-shm
+*.db-wal
+
+# Angular cache
+src/frontend/.angular/
+
+# npm lock and dist
+src/frontend/package-lock.json
+src/frontend/dist/

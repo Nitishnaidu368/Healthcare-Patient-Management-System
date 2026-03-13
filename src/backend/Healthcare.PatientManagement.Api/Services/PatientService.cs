@@ -20,7 +20,14 @@ public class PatientService : IPatientService
             .AsNoTracking()
             .OrderBy(x => x.LastName)
             .ThenBy(x => x.FirstName)
-            .Select(Map)
+            .Select(patient => new PatientResponse(
+                patient.Id,
+                patient.FirstName,
+                patient.LastName,
+                patient.DateOfBirth,
+                patient.Email,
+                patient.PhoneNumber,
+                patient.Gender))
             .ToListAsync(cancellationToken);
     }
 
@@ -29,7 +36,14 @@ public class PatientService : IPatientService
         return await _dbContext.Patients
             .AsNoTracking()
             .Where(x => x.Id == id)
-            .Select(Map)
+            .Select(patient => new PatientResponse(
+                patient.Id,
+                patient.FirstName,
+                patient.LastName,
+                patient.DateOfBirth,
+                patient.Email,
+                patient.PhoneNumber,
+                patient.Gender))
             .SingleOrDefaultAsync(cancellationToken);
     }
 
