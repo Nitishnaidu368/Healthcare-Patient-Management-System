@@ -1,119 +1,156 @@
 # Healthcare Patient Management System
 
-Full-stack reference implementation using `C#/.NET 8`, `Angular 17`, and `SQL Server` with CI/CD on GitHub Actions.
+Full-stack healthcare reference application built with **C# / .NET 8**, **Angular 17**, and **Entity Framework Core 8**.  
+Runs locally without Docker — the development environment uses **SQLite** so no database server installation is required.
 
-## Architecture (Top Layer)
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Backend API | ASP.NET Core 8 Web API |
+| ORM | Entity Framework Core 8 |
+| Database (local dev) | SQLite (auto-created on startup) |
+| Database (production) | SQL Server 2022 |
+| Frontend | Angular 17 (standalone components, reactive forms) |
+| Unit Tests | xUnit 2.8 + EF Core In-Memory |
+| Frontend Tests | Karma + Jasmine + ChromeHeadless |
+
+## Architecture
 
 ```mermaid
 flowchart LR
-    UI["Angular 17 Web App\nPort 4200"] --> API["ASP.NET Core Web API\nPort 5062"]
-    API --> DB["SQL Server 2022\nPort 1433"]
-    API --> TESTS["xUnit Unit Tests"]
-    GIT["GitHub Repo"] --> PIPE["GitHub Actions CI/CD"]
-    PIPE --> API
-    PIPE --> UI
+    UI["Angular 17\nPort 4200"] --> API["ASP.NET Core 8 API\nPort 5062"]
+    API -->|"local dev"| SQLITE["SQLite\nhealthcare_dev.db"]
+    API -->|"production"| SQLSERVER["SQL Server 2022\nPort 1433"]
+    API --> TESTS["xUnit Tests\n3/3 Passing ✅"]
 ```
 
-### Backend Architecture
-- `Controllers`: API endpoints and request/response handling.
-- `Services`: business logic (patient lifecycle, overlap-safe appointment scheduling).
-- `Data`: EF Core `AppDbContext` and SQL Server mapping.
-- `Domain`: entities (`Patient`, `Appointment`, `TreatmentPlan`).
-- `Tests`: xUnit + in-memory DB tests for service layer.
+### Backend Layers
+- `Controllers` — REST endpoints: `/api/patients`, `/api/appointments`
+- `Services` — business logic: patient lifecycle, overlap-safe appointment scheduling
+- `Data` — `AppDbContext` with EF Core migrations
+- `Domain` — entities: `Patient`, `Appointment`, `TreatmentPlan`
+- `DTOs` — request/response models with record types
+- `Tests` — xUnit service tests using EF Core In-Memory provider
 
-### Frontend Architecture
-- Standalone Angular app with reactive forms.
-- `PatientApiService` for API communication.
-- Single dashboard view for patient registration + appointment scheduling + read views.
+### Frontend
+- Standalone Angular 17 app with `inject()` DI pattern
+- `PatientApiService` for typed HTTP communication
+- Reactive forms for patient registration and appointment booking
+- Live patient and appointment list views
 
 ## Project Structure
 
 ```text
 .
-├── src
-│   ├── backend
-│   │   ├── Healthcare.PatientManagement.Api
-│   │   ├── Healthcare.PatientManagement.Tests
+├── src/
+│   ├── backend/
+│   │   ├── Healthcare.PatientManagement.Api/
+│   │   │   ├── Controllers/
+│   │   │   ├── Services/
+│   │   │   ├── Data/
+│   │   │   ├── Domain/
+│   │   │   ├── DTOs/
+│   │   │   ├── Properties/launchSettings.json
+│   │   │   ├── appsettings.json              ← SQL Server (production)
+│   │   │   ├── appsettings.Development.json  ← SQLite (local dev)
+│   │   │   └── Program.cs
+│   │   ├── Healthcare.PatientManagement.Tests/
 │   │   └── Healthcare.PatientManagement.sln
-│   └── frontend
-├── database
+│   └── frontend/
+│       └── src/app/
+│           ├── components/
+│           ├── models/
+│           └── services/
+├── database/
 │   └── init.sql
-├── docker-compose.yml
-└── .github/workflows/ci-cd.yml
+└── docker-compose.yml
 ```
 
-## Execution Guide
+## Local Development (No Docker Required)
 
 ### Prerequisites
-- `.NET SDK 8.0+`
-- `Node.js 20+` and `npm`
-- `Angular CLI 17+`
-- `SQL Server 2022` (local or container)
-- Optional: `Docker + Docker Compose`
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+- [Node.js 20 LTS](https://nodejs.org/) and npm
+- Angular CLI: `npm install -g @angular/cli`
 
-### Option A: Run Locally (Recommended for development)
+> **No SQL Server needed.** The API automatically creates a local `healthcare_dev.db` SQLite file on first startup when `ASPNETCORE_ENVIRONMENT=Development`.
 
-1. Start SQL Server and ensure this credential works:
-   - User: `sa`
-   - Password: `Your_strong_password123`
-2. Update connection string if required:
-   - File: `src/backend/Healthcare.PatientManagement.Api/appsettings.json`
-3. Run API:
+### 1. Run the Backend API
+
 ```bash
 cd src/backend/Healthcare.PatientManagement.Api
 dotnet restore
 dotnet run
 ```
-4. Run frontend (new terminal):
+
+API is available at `http://localhost:5062`  
+Swagger UI: `http://localhost:5062/swagger`
+
+### 2. Run the Frontend (new terminal)
+
 ```bash
 cd src/frontend
 npm install
 npx ng serve --port 4200
 ```
-5. Open app:
-   - Frontend: `http://localhost:4200`
-   - Swagger: `http://localhost:5062/swagger`
 
-### Option B: Run with Docker Compose
+App is available at `http://localhost:4200`
 
-```bash
-docker compose up --build
-```
+## Running Tests
 
-Endpoints after startup:
-- Frontend: `http://localhost:4200`
-- API: `http://localhost:5062`
-- SQL Server: `localhost:1433`
+### Backend (xUnit — 3/3 passing ✅)
 
-Stop stack:
-```bash
-docker compose down
-```
-
-## Verification Checklist
-
-### Backend
 ```bash
 cd src/backend
-dotnet test Healthcare.PatientManagement.sln --collect:"XPlat Code Coverage"
+dotnet test Healthcare.PatientManagement.sln --verbosity normal
 ```
 
-### Frontend
+### Frontend (Karma/Jasmine)
+
+```bash
+cd src/frontend
+npm test
+```
+
+### Frontend Production Build
+
 ```bash
 cd src/frontend
 npm run build
 ```
 
-### Manual Smoke Test
-1. Open UI at `http://localhost:4200`.
-2. Create a patient.
-3. Schedule an appointment for that patient.
-4. Verify records appear in patient and appointment tables.
-5. Test conflict handling by adding overlapping appointment for same doctor.
+## Production: Docker Compose (SQL Server)
 
-## API Contract Snapshot
+For production-like setup with SQL Server, use Docker Compose:
 
-### `POST /api/patients`
+```bash
+docker compose up --build
+```
+
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:4200 |
+| API | http://localhost:5062 |
+| SQL Server | localhost:1433 |
+
+```bash
+docker compose down   # stop all services
+```
+
+## API Reference
+
+### Patients
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/patients` | List all patients |
+| `GET` | `/api/patients/{id}` | Get patient by ID |
+| `POST` | `/api/patients` | Register new patient |
+| `PUT` | `/api/patients/{id}` | Update patient |
+| `DELETE` | `/api/patients/{id}` | Delete patient |
+
+**Create patient — request body:**
 ```json
 {
   "firstName": "Jane",
@@ -125,7 +162,17 @@ npm run build
 }
 ```
 
-### `POST /api/appointments`
+### Appointments
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/appointments` | List all appointments |
+| `GET` | `/api/appointments/{id}` | Get appointment by ID |
+| `POST` | `/api/appointments` | Book appointment |
+| `PUT` | `/api/appointments/{id}` | Update appointment |
+| `DELETE` | `/api/appointments/{id}` | Cancel appointment |
+
+**Book appointment — request body:**
 ```json
 {
   "patientId": "<patient-guid>",
@@ -136,26 +183,19 @@ npm run build
 }
 ```
 
-## CI/CD
+## Manual Smoke Test
 
-Workflow: `.github/workflows/ci-cd.yml`
-- Backend job: restore, build, test, code coverage collection.
-- Frontend job: npm install and production build.
-
-## GitHub Push Steps
-
-1. Create a new GitHub repository.
-2. Add remote and push:
-```bash
-git init
-git add .
-git commit -m "Initial commit: healthcare patient management system"
-git branch -M main
-git remote add origin https://github.com/<your-username>/<repo-name>.git
-git push -u origin main
-```
+1. Open `http://localhost:4200`
+2. Register a new patient using the form
+3. Schedule an appointment for that patient
+4. Verify records appear in the patient and appointment tables
+5. Try booking an overlapping appointment for the same doctor — it should be rejected
 
 ## Notes
-- The API bootstraps database schema on startup with `EnsureCreated()`.
-- For production, replace with EF migrations and secure secret storage.
-- Current CORS policy allows `http://localhost:4200`.
+
+- The API calls `EnsureCreated()` on startup — schema is bootstrapped automatically (dev only).
+- For production, replace with EF Core migrations and proper secret management.
+- DB provider is selected automatically based on the connection string format:
+  - `Data Source=...` → SQLite
+  - All other formats → SQL Server
+- CORS is configured for `http://localhost:4200`.
